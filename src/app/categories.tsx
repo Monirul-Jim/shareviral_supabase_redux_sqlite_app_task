@@ -14,7 +14,6 @@ export default function CategoriesScreen() {
 
   const [newCatName, setNewCatName] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
-
   const handleSaveCategory = () => {
     if (!newCatName.trim()) return;
     if (editingId) {
@@ -39,17 +38,17 @@ export default function CategoriesScreen() {
   };
 
   const renderItem = ({ item, index }: { item: Category; index: number }) => (
-    <Animated.View 
+    <Animated.View
       entering={FadeInUp.delay(index * 50).springify()}
       layout={Layout.springify()}
     >
       <View className="flex-row items-center bg-white p-4 mb-3 rounded-2xl shadow-sm border border-slate-100">
-        <View 
+        <View
           className="w-4 h-4 rounded-full mr-4"
-          style={{ backgroundColor: item.color || '#CBD5E1' }} 
+          style={{ backgroundColor: item.color || '#CBD5E1' }}
         />
         <Text className="text-lg font-semibold text-slate-800 flex-1">{item.name}</Text>
-        
+
         {isOnline && (
           <View className="flex-row gap-3">
             <TouchableOpacity onPress={() => handleEdit(item)}>
@@ -69,7 +68,7 @@ export default function CategoriesScreen() {
       <View className="px-6 pt-6 pb-4">
         <Text className="text-3xl font-extrabold text-slate-900 tracking-tight">Categories</Text>
       </View>
-      
+
       {!isOnline && (
         <View className="bg-red-50 mx-6 mb-4 p-3 rounded-xl border border-red-100">
           <Text className="text-red-500 font-semibold text-xs">Offline - You cannot create categories right now.</Text>
