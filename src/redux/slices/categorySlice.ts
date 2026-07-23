@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { supabase } from '../../services/supabaseClient';
-import { getLocalCategories, upsertLocalCategories } from '../../db/taskRepository';
+import { getLocalCategories, upsertLocalCategories, updateLocalCategory, deleteLocalCategory } from '../../db/taskRepository';
 import { Category } from '../../types/task';
 
 interface CategoryState {
@@ -55,6 +55,36 @@ export const addCategory = createAsyncThunk(
   }
 );
 
+export const updateCategory = createAsyncThunk(
+  'categories/update',
+  async ({ id, name }: { id: string, name: string }, { rejectWithValue }) => {
+    try {
+      const { error } = await supabase.from('categories').update({ name }).eq('id', id);
+      if (error) throw error;
+      
+      await updateLocalCategory(id, name);
+      return { id, name };
+    } catch (err: any) {
+      return rejectWithValue(err.message);
+    }
+  }
+);
+
+export const deleteCategory = createAsyncThunk(
+  'categories/delete',
+  async (id: string, { rejectWithValue }) => {
+    try {
+      const { error } = await supabase.from('categories').delete().eq('id', id);
+      if (error) throw error;
+      
+      await deleteLocalCategory(id);
+      return id;
+    } catch (err: any) {
+      return rejectWithValue(err.message);
+    }
+  }
+);
+
 const categorySlice = createSlice({
   name: 'categories',
   initialState,
@@ -78,6 +108,15 @@ const categorySlice = createSlice({
       })
       .addCase(addCategory.fulfilled, (state, action) => {
         state.categories.push(action.payload);
+      })
+      .addCase(updateCategory.fulfilled, (state, action) => {
+        const index = state.categories.findIndex(c => c.id === action.payload.id);
+        if (index !== -1) {
+          state.categories[index].name = action.payload.name;
+        }
+      })
+      .addCase(deleteCategory.fulfilled, (state, action) => {
+        state.categories = state.categories.filter(c => c.id !== action.payload);
       });
   },
 });

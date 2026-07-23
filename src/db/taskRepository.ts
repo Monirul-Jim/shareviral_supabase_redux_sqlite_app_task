@@ -18,6 +18,14 @@ export const upsertLocalCategories = async (categories: Category[]) => {
   }
 };
 
+export const updateLocalCategory = async (id: string, name: string) => {
+  await db.runAsync('UPDATE categories SET name = ? WHERE id = ?', [name, id]);
+};
+
+export const deleteLocalCategory = async (id: string) => {
+  await db.runAsync('DELETE FROM categories WHERE id = ?', [id]);
+};
+
 // --- Tasks ---
 
 export const getLocalTasks = async (): Promise<Task[]> => {

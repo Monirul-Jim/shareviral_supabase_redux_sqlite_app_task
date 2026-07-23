@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, FlatList, TextInput, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, FlatList, TextInput, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '../redux/store';
-import { addCategory } from '../redux/slices/categorySlice';
+import { addCategory, updateCategory, deleteCategory } from '../redux/slices/categorySlice';
 import { Category } from '../types/task';
 import { useNetworkStatus } from '../hooks/useNetworkStatus';
 import Animated, { FadeInUp, Layout } from 'react-native-reanimated';
@@ -13,11 +13,29 @@ export default function CategoriesScreen() {
   const isOnline = useNetworkStatus();
 
   const [newCatName, setNewCatName] = useState('');
+  const [editingId, setEditingId] = useState<string | null>(null);
 
-  const handleAddCategory = () => {
+  const handleSaveCategory = () => {
     if (!newCatName.trim()) return;
-    dispatch(addCategory({ name: newCatName.trim(), color: '#4F46E5' })); // Default indigo
+    if (editingId) {
+      dispatch(updateCategory({ id: editingId, name: newCatName.trim() }));
+      setEditingId(null);
+    } else {
+      dispatch(addCategory({ name: newCatName.trim(), color: '#4F46E5' })); // Default indigo
+    }
     setNewCatName('');
+  };
+
+  const handleEdit = (cat: Category) => {
+    setEditingId(cat.id);
+    setNewCatName(cat.name);
+  };
+
+  const handleDelete = (id: string) => {
+    Alert.alert('Delete Category', 'Are you sure you want to delete this category?', [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Delete', style: 'destructive', onPress: () => dispatch(deleteCategory(id)) },
+    ]);
   };
 
   const renderItem = ({ item, index }: { item: Category; index: number }) => (
@@ -30,7 +48,18 @@ export default function CategoriesScreen() {
           className="w-4 h-4 rounded-full mr-4"
           style={{ backgroundColor: item.color || '#CBD5E1' }} 
         />
-        <Text className="text-lg font-semibold text-slate-800">{item.name}</Text>
+        <Text className="text-lg font-semibold text-slate-800 flex-1">{item.name}</Text>
+        
+        {isOnline && (
+          <View className="flex-row gap-3">
+            <TouchableOpacity onPress={() => handleEdit(item)}>
+              <Text className="text-indigo-500 font-semibold">Edit</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => handleDelete(item.id)}>
+              <Text className="text-red-500 font-semibold">Del</Text>
+            </TouchableOpacity>
+          </View>
+        )}
       </View>
     </Animated.View>
   );
@@ -52,20 +81,31 @@ export default function CategoriesScreen() {
       <View className="flex-row px-6 mb-6">
         <TextInput
           className="flex-1 bg-white rounded-2xl p-4 text-base text-slate-900 shadow-sm border border-slate-100 mr-3"
-          placeholder="New category name..."
+          placeholder={editingId ? "Rename category..." : "New category name..."}
           placeholderTextColor="#94A3B8"
           value={newCatName}
           onChangeText={setNewCatName}
         />
+        {editingId && (
+          <TouchableOpacity
+            className="justify-center items-center px-4 mr-2 rounded-2xl shadow-sm bg-slate-200"
+            onPress={() => {
+              setEditingId(null);
+              setNewCatName('');
+            }}
+          >
+            <Text className="text-slate-600 font-bold text-base">✕</Text>
+          </TouchableOpacity>
+        )}
         <TouchableOpacity
           className={`justify-center items-center px-6 rounded-2xl shadow-sm ${(!isOnline || loading || !newCatName.trim()) ? 'bg-slate-300' : 'bg-indigo-600'}`}
-          onPress={handleAddCategory}
+          onPress={handleSaveCategory}
           disabled={!isOnline || loading || !newCatName.trim()}
         >
           {loading ? (
             <ActivityIndicator color="white" />
           ) : (
-            <Text className="text-white font-bold text-base">Add</Text>
+            <Text className="text-white font-bold text-base">{editingId ? 'Save' : 'Add'}</Text>
           )}
         </TouchableOpacity>
       </View>

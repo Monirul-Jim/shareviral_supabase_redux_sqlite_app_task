@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Alert, Switch } from 'react-native';
-import { useLocalSearchParams, router } from 'expo-router';
+import { useLocalSearchParams, router, useFocusEffect } from 'expo-router';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '../../redux/store';
 import { addTask, updateTask, deleteTask, toggleTaskStarLocal } from '../../redux/slices/taskSlice';
@@ -44,19 +44,21 @@ export default function TaskDetailScreen() {
     }
   };
 
-  useEffect(() => {
-    if (existingTask && !isNew) {
-      setTitle(existingTask.title);
-      setDescription(existingTask.description || '');
-      setCategoryId(existingTask.category_id);
-      setIsStarred(existingTask.is_starred || false);
-    } else if (isNew) {
-      setTitle('');
-      setDescription('');
-      setCategoryId(null);
-      setIsStarred(false);
-    }
-  }, [existingTask, isNew]);
+  useFocusEffect(
+    useCallback(() => {
+      if (existingTask && !isNew) {
+        setTitle(existingTask.title);
+        setDescription(existingTask.description || '');
+        setCategoryId(existingTask.category_id);
+        setIsStarred(existingTask.is_starred || false);
+      } else if (isNew) {
+        setTitle('');
+        setDescription('');
+        setCategoryId(null);
+        setIsStarred(false);
+      }
+    }, [existingTask, isNew])
+  );
 
   const handleSave = async () => {
     if (!title.trim()) {
